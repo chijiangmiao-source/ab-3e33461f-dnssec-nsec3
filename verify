@@ -1,0 +1,5 @@
+#!/bin/sh
+# 一次性验收入口：构建检查 + 代码测试 + API/HTTP 冒烟，完成即退出，退出码报告结果。
+DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+cd "$DIR" || exit 2
+exec python3 -m verify_pkg "$@"

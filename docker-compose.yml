@@ -1,0 +1,32 @@
+services:
+  web:
+    build: .
+    image: nsec3-audit:latest
+    container_name: nsec3-audit-web
+    ports:
+      # 宿主机端口可通过 .env / 环境变量 WEB_HOST_PORT 配置
+      - "${WEB_HOST_PORT:-8080}:8080"
+    environment:
+      AUDIT_BIND: "0.0.0.0"
+      AUDIT_PORT: "8080"
+      AUDIT_DATA_DIR: "/data"
+    volumes:
+      - audit-data:/data
+    restart: unless-stopped
+
+  # 一次性验收服务：等待 web 健康后执行 verify，完成即退出，以退出码报告结果。
+  # 取退出码：docker compose run --rm verify
+  # 或随栈启动并以其退出码为准：
+  #   docker compose up --abort-on-container-exit --exit-code-from verify
+  verify:
+    image: nsec3-audit:latest
+    build: .
+    container_name: nsec3-audit-verify
+    command: ["verify", "--base-url", "http://web:8080"]
+    depends_on:
+      web:
+        condition: service_healthy
+    restart: "no"
+
+volumes:
+  audit-data:
